@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import math
 
 
 def detect_show_marker(img, gray, aruco_dict, parameters, camera_matrix, dist_coeffs):
@@ -22,68 +21,29 @@ def detect_show_marker(img, gray, aruco_dict, parameters, camera_matrix, dist_co
                 distance_1 = tvec[0][0][2]
                 detected_1 = True
             elif ids[k] == j:
+                img = cv2.aruco.drawAxis(img, camera_matrix, dist_coeffs, rvec, tvec, 0.05)
                 m_1_rvec = rvec
                 m_1_tvec = tvec
                 distance_2 = tvec[0][0][2]
                 detected_2 = True
             if detected_1 and detected_2:
-                """ 
-                frvec - orientation vector of the marker regarding the reference 
-                system.
-                ftvec -  position of aruco regarding the rs.
-                m_1_tvec - position of aruco regarding camera.
-                """
-                frvec, ftvec = relation_position(m_1_rvec, m_1_tvec, m_0_rvec, m_0_tvec, False)
-                for i in len(ftvec):
-                    ftvec[0][i] /= 2  # ??
-
-                frvec_new, ftvec_new = relation_position(frvec, ftvec, m_1_rvec, m_1_tvec, True)
-                pose, orientation = inverse_vec(frvec_new, ftvec_new)
-
-                cv2.putText(img, 'middle_point: %.2fsm' % (distance_1*100), (0, 32), font, 1, (0, 255, 0), 2,
-                            cv2.LINE_AA)
+                middle_point = np.array([(m_0_tvec[0][0][0] + m_1_tvec[0][0][0]) / 2,
+                                         (m_0_tvec[0][0][1] + m_1_tvec[0][0][1]) / 2,
+                                         (m_0_tvec[0][0][2] + m_1_tvec[0][0][2]) / 2])
+                middle_point = middle_point.reshape((1, 1, 3))
+                img = cv2.aruco.drawAxis(img, camera_matrix, dist_coeffs, rvec, middle_point, 0.05)
+                cv2.putText(img, 'distance_to_platform: %.4fm' % (middle_point[0][0][2]), (0, 32), font, 1,
+                            (0, 255, 0), 2, cv2.LINE_AA)
 
     if distance_1 is not None:
-        cv2.putText(img, 'Id' + str(i) + ' %.2fsm' % (distance_1*100), (0, 64), font, 1, (0, 255, 0), 2, cv2.LINE_AA)
+        cv2.putText(img, 'Id' + str(i) + ' %.4fm' % distance_1, (0, 64), font, 1, (0, 255, 0), 2, cv2.LINE_AA)
     if distance_2 is not None:
-        cv2.putText(img, 'Id' + str(j) + ' %.2fsm' % (distance_2*100), (0, 104), font, 1, (0, 255, 0), 2, cv2.LINE_AA)
+        cv2.putText(img, 'Id' + str(j) + ' %.4fm' % distance_2, (0, 104), font, 1, (0, 255, 0), 2, cv2.LINE_AA)
+    if cv2.waitKey(5) == 115:
+        print('saved')
+        cv2.imwrite('test.png', img)
+
     return cv2.imshow('frame', img)  # Final img.
-
-
-def rotmtx_to_euler_angles(R):
-    sy = math.sqrt(R[0, 0] * R[0, 0] + R[1, 0] * R[1, 0])
-    singular = sy < 1e-6 
-    if not singular:
-        x = math.atan2(R[2, 1], R[2, 2])
-        y = math.atan2(-R[2, 0], sy)
-        z = math.atan2(R[1, 0], R[0, 0])
-    else :
-        x = math.atan2(-R[1, 2], R[1, 1])
-        y = math.atan2(-R[2, 0], sy)
-        z = 0
-    return np.array([x, y, z])
-
-
-def relation_position(rvec_1, tvec_1, rvec_2, tvec_2, is_inv):
-    rvec_1, tvec_1 = rvec_1.reshape((3, 1)), tvec_1.reshape((3, 1))
-    rvec_2, tvec_2 = rvec_2.reshape((3, 1)), tvec_2.reshape((3, 1))
-    irvec, itvec = inverse_vec(rvec_2, tvec_2)
-    if is_inv:
-        mtx = cv2.composeRT(irvec, itvec, rvec_1, tvec_1)
-    else:
-        mtx = cv2.composeRT(rvec_1, tvec_1, irvec, itvec)
-    composed_rvec, composed_tvec = mtx[0], mtx[1]
-    composed_rvec = composed_rvec.reshape((3, 1))
-    composed_tvec = composed_tvec.reshape((3, 1))
-    return composed_rvec, composed_tvec
-
-
-def inverse_vec(rvec, tvec):
-    r, _ = cv2.Rodrigues(rvec)
-    r = np.ndarray(r).T  # np.matrix(R).T
-    i_tvec = np.dot(r, np.ndarray(-tvec))
-    i_rvec, _ = cv2.Rodrigues(r)
-    return i_rvec, i_tvec
 
 
 def undistort_image(img, camera_matrix, dist_coeffs):
