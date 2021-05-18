@@ -27,12 +27,17 @@ def detect_show_marker(img, gray, aruco_dict, parameters, camera_matrix, dist_co
                 distance_2 = tvec[0][0][2]
                 detected_2 = True
             if detected_1 and detected_2:
-                middle_point = np.array([(m_0_tvec[0][0][0] + m_1_tvec[0][0][0]) / 2,
-                                         (m_0_tvec[0][0][1] + m_1_tvec[0][0][1]) / 2,
-                                         (m_0_tvec[0][0][2] + m_1_tvec[0][0][2]) / 2])
-                middle_point = middle_point.reshape((1, 1, 3))
-                img = cv2.aruco.drawAxis(img, camera_matrix, dist_coeffs, rvec, middle_point, 0.05)
-                cv2.putText(img, 'distance_to_platform: %.4fm' % (middle_point[0][0][2]), (0, 32), font, 1,
+                middle_point_pose = np.array([(m_0_tvec[0][0][0] + m_1_tvec[0][0][0]) / 2,
+                                              (m_0_tvec[0][0][1] + m_1_tvec[0][0][1]) / 2,
+                                              (m_0_tvec[0][0][2] + m_1_tvec[0][0][2]) / 2])
+                middle_point_pose = middle_point_pose.reshape((1, 1, 3))
+                middle_point_orientation = np.array([(m_0_rvec[0][0][0] + m_1_rvec[0][0][0]) / 2,
+                                                     (m_0_rvec[0][0][1] + m_1_rvec[0][0][1]) / 2,
+                                                     (m_0_rvec[0][0][2] + m_1_rvec[0][0][2]) / 2])
+                middle_point_orientation = middle_point_orientation.reshape((1, 1, 3))
+                img = cv2.aruco.drawAxis(img, camera_matrix, dist_coeffs,
+                                         middle_point_orientation, middle_point_pose, 0.05)
+                cv2.putText(img, 'distance_to_platform: %.4fm' % (middle_point_pose[0][0][2]), (0, 32), font, 1,
                             (0, 255, 0), 2, cv2.LINE_AA)
 
     if distance_1 is not None:
