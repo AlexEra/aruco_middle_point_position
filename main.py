@@ -1,34 +1,30 @@
 import cv2
-import cv2.aruco as aruco
 import pickle
 from utils import detect_show_marker, undistort_image
 
 
 if __name__ == '__main__':
     cap = cv2.VideoCapture(0)
-    aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
-    parameters = aruco.DetectorParameters_create()
+    aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)
+    parameters = cv2.aruco.DetectorParameters_create()
 
-    # Load coeffs.
+    ''' Load coefficients '''
     with open('cam_param.pkl', 'rb') as f:
         camera_param = pickle.load(f)
-    cameraMatrix, distCoeffs, rvecs, tvecs, stdDeviationsInstrinsics, 
-    stdDeviationsExtrinsics = camera_param
+    camera_mtx, dist_coefficients, _, _, _, _ = camera_param
 
     while True:
-        # Capture frame-by-frame.
+        ''' Capture frame-by-frame '''
         ret, img = cap.read()
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        s_img = img
         
-        # Undistorting.
-        img = undistort_image(img, cameraMatrix, distCoeffs)
+        ''' Undistorting '''
+        # u_img = undistort_image(img, camera_mtx, dist_coefficients)
         
-        # Show detected marker.
-        detect_show_marker(s_img, gray, aruco_dict, parameters, cameraMatrix,
-                           distCoeffs)
+        ''' Show detected marker '''
+        detect_show_marker(img, gray, aruco_dict, parameters, camera_mtx, dist_coefficients)
         
-        # Press esc for close.
+        ''' Press esc for close '''
         if cv2.waitKey(5) == 27:
             break
     cap.release()
