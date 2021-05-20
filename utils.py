@@ -2,18 +2,27 @@ import cv2
 import numpy as np
 
 
-def detect_show_marker(img, gray, aruco_dict, parameters, camera_matrix, dist_coeffs):
+def detect_show_markers(img, gray, aruco_dict, parameters, camera_matrix, dist_coeffs, i=6, j=5):
+    """
+    :param img: coloured image without distortion
+    :param gray: grayscale image without distortion
+    :param aruco_dict: markers data base to detect
+    :param parameters: aruco detector parameters
+    :param camera_matrix: matrix with camera parameters
+    :param dist_coeffs: distortion coefficients  (from calibrating)
+    :param i: 6, Id of aruco - reference system
+    :param j: 5, Id of target aruco
+    :return: show image
+    """
     detected_1, detected_2 = False, False
-    i, j = None, None
     distance_1, distance_2 = None, None
     font = cv2.FONT_HERSHEY_SIMPLEX
     corners, ids, rejected_img_points = cv2.aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
     img = cv2.aruco.drawDetectedMarkers(img, corners, ids)
     if ids is not None:
-        i = 6  # Id of aruco - reference system.
-        j = 5  # Id of target aruco.
-        for k in range(0, len(ids)):
-            rvec, tvec, marker_points = cv2.aruco.estimatePoseSingleMarkers(corners[k], 0.045, camera_matrix, dist_coeffs)
+        for k in range(len(ids)):
+            rvec, tvec, marker_points = cv2.aruco.estimatePoseSingleMarkers(corners[k], 0.045, camera_matrix,
+                                                                            dist_coeffs)
             if ids[k] == i:
                 img = cv2.aruco.drawAxis(img, camera_matrix, dist_coeffs, rvec, tvec, 0.05)
                 m_0_rvec = rvec
@@ -52,6 +61,12 @@ def detect_show_marker(img, gray, aruco_dict, parameters, camera_matrix, dist_co
 
 
 def undistort_image(img, camera_matrix, dist_coeffs):
+    """
+    :param img: image
+    :param camera_matrix: matrix with camera parameters
+    :param dist_coeffs: distortion coefficients  (from calibrating)
+    :return: image without distortion
+    """
     h, w = img.shape[:2]
     new_camera_mtx, roi = cv2.getOptimalNewCameraMatrix(camera_matrix, dist_coeffs, (w, h), 1, (w, h))
 

@@ -1,6 +1,6 @@
 import cv2
 import pickle
-from utils import detect_show_marker, undistort_image
+from utils import detect_show_markers, undistort_image
 
 
 if __name__ == '__main__':
@@ -15,15 +15,15 @@ if __name__ == '__main__':
 
     while True:
         ''' Capture frame-by-frame '''
-        ret, img = cap.read()
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        _, img = cap.read()
         
         ''' Undistorting '''
-        # u_img = undistort_image(img, camera_mtx, dist_coefficients)
-        
+        img = undistort_image(img, camera_mtx, dist_coefficients)
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
         ''' Show detected marker '''
-        detect_show_marker(img, gray, aruco_dict, parameters, camera_mtx, dist_coefficients)
-        
+        detect_show_markers(img, gray, aruco_dict, parameters, camera_mtx, dist_coefficients)
+
         ''' Press esc for close '''
         if cv2.waitKey(5) == 27:
             break
