@@ -4,7 +4,7 @@ from utils import detect_show_markers, undistort_image
 
 
 if __name__ == '__main__':
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0)  # or cv2.VideoCapture(0, cv2.CAP_DSHOW)
     aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)
     parameters = cv2.aruco.DetectorParameters_create()
 
